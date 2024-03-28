@@ -66,6 +66,7 @@ struct Frame {
     name: String,
     group_id: u32,
     parent_group_id: u32,
+    visible: bool,
 }
 
 impl LayerAndMaskInformationSection {
@@ -136,6 +137,7 @@ impl LayerAndMaskInformationSection {
             name: String::from("root"),
             group_id: 0,
             parent_group_id: 0,
+            visible:true,
         }];
 
         // Viewed group counter
@@ -156,6 +158,7 @@ impl LayerAndMaskInformationSection {
                         name: layer_record.name,
                         group_id: already_viewed,
                         parent_group_id: current_group_id,
+                        visible : layer_record.visible
                     };
 
                     stack.push(frame);
@@ -182,6 +185,7 @@ impl LayerAndMaskInformationSection {
                         } else {
                             None
                         },
+                        frame.visible,
                     ));
                 }
 
@@ -386,7 +390,7 @@ fn read_layer_record(cursor: &mut PsdCursor) -> Result<LayerRecord, PsdLayerErro
     //  - bit 2 = obsolete;
     //  - bit 3 = 1 for Photoshop 5.0 and later, tells if bit 4 has useful information;
     //  - bit 4 = pixel data irrelevant to appearance of document
-    let visible = cursor.read_u8() & (1 << 1) != 0; // here we get second bit - visible
+    let visible = cursor.read_u8() & (1 << 1) == 0; // here we get second bit - visible
 
     // We do not currently parse the filler, skip it
     cursor.read_1();

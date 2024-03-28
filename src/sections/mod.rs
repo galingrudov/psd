@@ -187,7 +187,12 @@ impl<'a> PsdCursor<'a> {
 
     /// Read 1 byte as a u8
     pub fn read_u8(&mut self) -> u8 {
-        self.read_1()[0]
+        let bytes = self.read_1();
+
+        let mut array = [0; 1];
+        array.copy_from_slice(bytes);
+        u8::from_be_bytes(array)
+
     }
 
     /// Read 2 bytes as a u16

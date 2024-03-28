@@ -138,6 +138,8 @@ pub struct PsdGroup {
     pub(crate) contained_layers: Range<usize>,
     /// Common layer properties
     pub(crate) layer_properties: LayerProperties,
+    //visble
+    pub(crate) visible : bool,
 }
 
 impl PsdGroup {
@@ -150,6 +152,7 @@ impl PsdGroup {
         psd_width: u32,
         psd_height: u32,
         group_id: Option<u32>,
+        is_visible: bool,
     ) -> Self {
         let layer_properties =
             LayerProperties::from_layer_record(name, layer_record, psd_width, psd_height, group_id);
@@ -158,13 +161,24 @@ impl PsdGroup {
             id,
             contained_layers,
             layer_properties,
+            visible : is_visible,
         }
     }
 
+    ///group visible
+    pub fn is_visible(&self)->bool{
+        self.visible
+    }
     /// A unique identifier for the layer within the PSD file
     pub fn id(&self) -> u32 {
         self.id
     }
+
+    ///get layers
+    pub fn get_cont_layers(&self) ->Range<usize>{
+        self.contained_layers.clone()
+    }
+
 }
 
 impl Deref for PsdGroup {
@@ -266,8 +280,8 @@ impl Deref for PsdLayer {
 }
 
 /// GroupDivider represents tag type of Section divider.
-#[derive(Debug, Clone)]
-pub(super) enum GroupDivider {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum GroupDivider {
     /// 0 = any other type of layer
     Other = 0,
     /// 1 = open "folder"
