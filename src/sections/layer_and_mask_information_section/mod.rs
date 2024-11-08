@@ -580,7 +580,7 @@ fn readDescriptorStructure(cursor: &mut PsdCursor)
 {
     let class_data = readClassStructure(cursor);
     let mut result : HashMap<String, DescriptorValue> = HashMap::new();
-    result.insert(class_data.0, DescriptorValue::String(class_data.1)).unwrap();
+    result.insert(class_data.0, DescriptorValue::String(class_data.1));
     let itemsCount =  cursor.read_u32();
     for  _  in 0..itemsCount {
         let key = readAsciiStringOrClassId(cursor);
