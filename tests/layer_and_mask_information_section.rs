@@ -2,6 +2,15 @@ use psd::{Psd, PsdGroup};
 
 const GREEN_PIXEL: [u8; 4] = [0, 255, 0, 255];
 
+
+#[test]
+fn layer_smart_object() {
+    let psd = include_bytes!("./fixtures/smart_objects.psd");
+
+    let psd = Psd::from_bytes(psd).unwrap();
+    assert_eq!(psd.layers().len(), 2);
+    
+}
 /// cargo test --test layer_and_mask_information_section layer_and_mask_information_section -- --exact
 #[test]
 fn layer_and_mask_information_section() {

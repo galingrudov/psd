@@ -22,6 +22,11 @@ const KEY_UNICODE_LAYER_NAME: &[u8; 4] = b"luni";
 /// Key of `Section divider setting (Photoshop 6.0)`, "lsct"
 const KEY_SECTION_DIVIDER_SETTING: &[u8; 4] = b"lsct";
 
+///Smart Object Layer Data (Photoshop CC 2015), "soLd"
+const KEY_SMART_OBJECT_LAYER_DATA: &[u8; 4] = b"PlLd";
+
+const KEY_SMART_OBJECT_LAYER_DATA2: &[u8; 4] = b"SoLd";
+
 pub mod groups;
 pub mod layer;
 pub mod layers;
@@ -450,6 +455,103 @@ fn read_layer_record(cursor: &mut PsdCursor) -> Result<LayerRecord, PsdLayerErro
                     cursor.read_4();
                 }
             }
+            KEY_SMART_OBJECT_LAYER_DATA2=>{
+                
+                let type_ = cursor.read_4();
+                let version =  cursor.read_u32();
+                let description =  cursor.read_u32();
+                readDescriptorStructure(cursor);
+               
+                // let name = cursor.read_unicode_string_padding(1);
+                
+                // let class_id =  cursor.read_u32();
+                // let class_ID =  cursor.read_4();
+                
+                // let class_ID = std::str::from_utf8(class_ID).unwrap();
+                
+                // let mut reference_struct_items =  cursor.read_u32();
+                
+                    
+                //     let reference_struct_key_1 = cursor.read_u32();
+                //     //if(reference_struct_key_1 == 0){
+                //         let reference_struct_type = cursor.read_4();
+                //         let reference_struct_type = std::str::from_utf8(reference_struct_type);
+                //         let item_type = cursor.read_4();
+                //         let item_type = std::str::from_utf8(item_type);
+                //         //read type string
+                //         let name = cursor.read_unicode_string_padding(1);
+                //         let pos = cursor.position();
+                //        // let buf = cursor.read(additional_layer_info_len);
+                        
+                //     //}
+                //     let reference_struct_key_2 = cursor.read_u32();
+                //     let reference_struct_type_2 = cursor.read(reference_struct_key_2) ;
+                //     let reference_struct_type_2 = std::str::from_utf8(reference_struct_type_2).unwrap();
+                //     let item_type_2 = cursor.read_4();
+                //     let item_type_2 = std::str::from_utf8(item_type_2).unwrap();
+                //     //read TEXT
+                //     let some_text = cursor.read_unicode_string_padding(1);
+
+                //     let reference_struct_key_3 = cursor.read_u32();
+                //     let reference_struct_type_3 = cursor.read_4();
+                //     let reference_struct_type_3 = std::str::from_utf8(reference_struct_type_3);
+                //     let item_type_3 = cursor.read_4();
+                //     let item_type_3 = std::str::from_utf8(item_type_3);
+                //     //read type Long
+                //     let read_type_3 = cursor.read_u32();
+
+                //     let reference_struct_key_4 = cursor.read_u32();
+                //     let reference_struct_type_4 = cursor.read(reference_struct_key_4);
+                //     let reference_struct_type_4 = std::str::from_utf8(reference_struct_type_4);
+                //     let item_type_4 = cursor.read_4();
+                //     let item_type_4 = std::str::from_utf8(item_type_4);
+                //     //read type long
+                //     let read_type_4 = cursor.read_u32();
+
+                //     let reference_struct_key_5 = cursor.read_u32();
+                //     let reference_struct_type_5 = cursor.read_4();
+                //     let reference_struct_type_5 = std::str::from_utf8(reference_struct_type_5).unwrap();
+                //     let item_type_5 = cursor.read_4();
+                //     let item_type_5 = std::str::from_utf8(item_type_5).unwrap();
+                //     //read type long
+                //     let read_type_5 = cursor.read_u32();
+
+                //     let reference_struct_key_6 = cursor.read_u32();
+                //     let reference_struct_type_6 =  cursor.read(reference_struct_key_6);
+                //     let reference_struct_type_6 = std::str::from_utf8(reference_struct_type_6).unwrap();
+                //     let item_type_6 = cursor.read_4();
+                //     let item_type_6 = std::str::from_utf8(item_type_6).unwrap();
+                //     //read type objc
+                //         let descriptorname = cursor.read_unicode_string_padding(1);
+                //         let class_id =  cursor.read_u32();
+                //         let class_ID =  cursor.read_4();
+                
+                //         let class_ID = std::str::from_utf8(class_ID).unwrap();
+                
+                //         let mut reference_struct_items =  cursor.read_u32();
+                    
+                //     //let buf = cursor.read(additional_layer_info_len-100);
+                //     let pos = cursor.position();
+                
+
+            }
+
+            // KEY_SMART_OBJECT_LAYER_DATA =>{
+            //      let type_ = cursor.read_4();
+            //      let version =  cursor.read_u32();
+              
+                 
+            //       let descriptor_version =  cursor.read_pascal_string();
+            //       let data = cursor.read_u32();
+            //       let lenght =  cursor.read_u32();
+            //       let item1 = cursor.read_u32();
+            //       let item2 = cursor.read_u32();
+            //       let item = cursor.read_f32();
+               
+            //      let pos = cursor.position();
+            //     // let r = 0 +pos;
+
+            // }
 
             // TODO: Skipping other keys until we implement parsing for them
             _ => {
@@ -471,4 +573,126 @@ fn read_layer_record(cursor: &mut PsdCursor) -> Result<LayerRecord, PsdLayerErro
         blend_mode,
         divider_type,
     })
+}
+
+
+fn readDescriptorStructure(cursor: &mut PsdCursor)
+{
+    let class_data = readClassStructure(cursor);
+    let mut result : HashMap<String, DescriptorValue> = HashMap::new();
+    result.insert(class_data.0, DescriptorValue::String(class_data.1)).unwrap();
+    let itemsCount =  cursor.read_u32();
+    for  _  in 0..itemsCount {
+        let key = readAsciiStringOrClassId(cursor);
+        let sig_type = read_signature(cursor);
+        let data = read_os_type(cursor, &sig_type);
+        result.insert(key, data);
+        
+    }
+
+}
+
+fn read_os_type(cursor: &mut PsdCursor, os_type: &String)->DescriptorValue{
+
+    match os_type.as_str() {
+        "obj"=>   readReferenceStructure(cursor), 
+        "Objc"=>todo!(),
+        "GlbO"=>todo!(),
+        "VlLs"=>todo!(),
+        "doub"=>todo!(),
+        "UntF"=>todo!(),
+        "UnFl"=>todo!(),
+        "TEXT"=>todo!(),
+        "enum"=>todo!(),
+        "long"=>todo!(),
+        "comp"=>todo!(),
+        "bool"=>todo!(),
+        "type"=>todo!(),
+        "GlbC"=>todo!(),
+        "alis"=>todo!(),
+        "tdta"=>todo!(),
+        "ObAr"=>todo!(),
+        "Pth"=>todo!(),
+        _ =>todo!()
+    }
+} 
+
+fn readReferenceStructure(cursor: &mut PsdCursor)->DescriptorValue{
+    let items_count = cursor.read_u32();
+    for _ in 0..items_count {
+        let signature  = read_signature(cursor);
+        match signature.as_str() {
+            "prop"=>todo!(),
+            "Clss"=>todo!(),
+            "Enmr"=>todo!(),
+            "rele"=>todo!(),
+            "Idnt"=>todo!(),
+            "indx"=>todo!(),
+            "name"=>todo!(),
+            _=>todo!()
+            
+        } 
+    }
+    DescriptorValue::Integer(2)
+}
+
+fn read_signature(cursor: &mut PsdCursor)->String{
+    read_short_string(cursor,4)
+}
+fn readClassStructure(cursor: &mut PsdCursor)->(String, String){
+    let name = cursor.read_unicode_string_padding(1);
+    let class_id = readAsciiStringOrClassId(cursor);
+
+    (name, class_id)
+}
+
+fn readAsciiStringOrClassId(cursor: &mut PsdCursor)->String{
+    let lenght = cursor.read_u32();
+    if lenght == 0 {
+        return  read_short_string(cursor, 4);
+        
+    }
+    read_short_string(cursor, lenght)
+    
+}
+fn read_short_string(cursor: &mut PsdCursor, lenght: u32 )->String{
+    let data = cursor.read(lenght);
+    std::str::from_utf8(data).unwrap().to_string()
+}
+#[derive(Debug)]
+pub struct Descriptor {
+    /// A map from keys (often string identifiers) to descriptor values.
+    pub items: HashMap<String, DescriptorValue>,
+}
+#[derive(Debug)]
+pub enum DescriptorValue {
+    Class {
+        name : String,
+        class_id: String,
+    },
+    /// Boolean value.
+    Boolean(bool),
+    /// Integer value.
+    Integer(i32),
+    /// Double-precision floating-point value.
+    Double(f64),
+    /// String value.
+    String(String),
+    /// An object containing a nested descriptor.
+    Object {
+        /// The type identifier of the object.
+        type_id: String,
+        /// The nested descriptor.
+        descriptor: Descriptor,
+    },
+    /// An enumerated type.
+    Enumerated {
+        /// The type identifier of the enumeration.
+        type_id: String,
+        /// The enumeration value identifier.
+        enum_id: String,
+    },
+    /// A list of descriptor values.
+    List(Vec<DescriptorValue>),
+    // You can add more variants here for other types like Alias, RawData, etc.
 }

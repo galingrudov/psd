@@ -240,6 +240,16 @@ impl<'a> PsdCursor<'a> {
         i32::from_be_bytes(array)
     }
 
+    /// Read 8 bytes as a f32
+    pub fn read_f32(&mut self) -> f32 {
+        let bytes = self.read_4();
+
+        let mut array = [0; 4];
+        array.copy_from_slice(bytes);
+
+        f32::from_be_bytes(array)
+    }
+
     /// Read 8 bytes as a f64
     pub fn read_f64(&mut self) -> f64 {
         let bytes = self.read_8();
@@ -275,7 +285,7 @@ impl<'a> PsdCursor<'a> {
     /// A 4-byte length field, representing the number of UTF-16 code units in the string (not bytes).
     /// The string of Unicode values, two bytes per character and a two byte null for the end of the string.
     pub fn read_unicode_string_padding(&mut self, padding: usize) -> String {
-        let length = self.read_u32() as usize;
+        let length: usize = self.read_u32() as usize;
         // UTF-16 encoding - two bytes per character
         let length_bytes = length * 2;
 
